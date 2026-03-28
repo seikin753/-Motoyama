@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 
 import Link from "next/link";
 import { Icons } from "@/components/icons";
+import AuthProvider from "@/components/AuthProvider";
 
 export default function RootLayout({
   children,
@@ -22,14 +23,16 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${inter.variable} ${noto.variable} font-sans bg-[#0a0a0f] text-[#f0f0f5] min-h-screen pb-20`}>
-        <div className="max-w-[480px] mx-auto min-h-screen border-x border-white/5 bg-[#0a0a0f] shadow-2xl">
-          <header className="sticky top-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between">
-            <Link href="/">
-              <h1 className="text-xl font-black bg-gradient-to-r from-[#ff6b35] to-[#ff4757] bg-clip-text text-transparent">
-                MuscleBoard
-              </h1>
-            </Link>
-          </header>
+        <AuthProvider>
+          <div className="max-w-[480px] mx-auto min-h-screen border-x border-white/5 bg-[#0a0a0f] shadow-2xl">
+            <header className="sticky top-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between">
+              <Link href="/">
+                <h1 className="text-xl font-black bg-gradient-to-r from-[#ff6b35] to-[#ff4757] bg-clip-text text-transparent">
+                  MuscleBoard
+                </h1>
+              </Link>
+            </header>
+
           <main className="p-4">
             {children}
           </main>
@@ -47,6 +50,7 @@ export default function RootLayout({
             </div>
           </nav>
         </div>
+        </AuthProvider>
       </body>
     </html>
   );
