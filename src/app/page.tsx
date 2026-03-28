@@ -1,65 +1,64 @@
-import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-6">
+      <section>
+        <div className="flex justify-between items-end mb-4">
+          <h2 className="text-2xl font-bold">ダッシュボード</h2>
+          <span className="text-sm text-[#8888a8]">2026年3月29日</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="PR 更新" value="3" unit="種目" color="accent" />
+          <StatCard label="継続日数" value="12" unit="日" color="fire" />
+          <StatCard label="推定1RM" value="105" unit="kg" />
+          <StatCard label="週刊ボリューム" value="12,500" unit="kg" />
         </div>
-      </main>
+      </section>
+
+      <section className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+        <h3 className="text-[#8888a8] text-xs font-bold uppercase tracking-widest mb-4">本日のトレーニング</h3>
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-[#16162a] flex items-center justify-center border border-white/5 font-bold text-[#a29bfe]">1</div>
+            <div>
+              <p className="font-bold">ベンチプレス</p>
+              <p className="text-xs text-[#555570]">前回: 85kg x 8</p>
+            </div>
+          </div>
+          <button className="w-full py-4 bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] rounded-xl font-bold shadow-[0_4px_16px_rgba(108,92,231,0.3)] active:scale-95 transition-transform">
+            記録を開始する
+          </button>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-[#8888a8] text-xs font-bold uppercase tracking-widest">最近の成長</h3>
+        <div className="bg-[#16162a] border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#ff6b35]/10 rounded-lg text-[#ff6b35]">🔥</div>
+            <div>
+              <p className="text-sm font-bold">スクワット 記録更新！</p>
+              <p className="text-xs text-[#555570]">100kg &rarr; 105kg</p>
+            </div>
+          </div>
+          <span className="text-xs text-[#555570]">3時間前</span>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StatCard({ label, value, unit, color = "default" }: { label: string; value: string; unit: string; color?: "default" | "accent" | "fire" }) {
+  const colorClass = color === "accent" ? "text-[#a29bfe]" : color === "fire" ? "text-[#ff6b35]" : "text-white";
+  return (
+    <div className="bg-[#16162a] border border-white/5 rounded-2xl p-4 shadow-md">
+      <p className="text-[10px] text-[#555570] font-bold uppercase mb-1">{label}</p>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-2xl font-black ${colorClass}`}>{value}</span>
+        <span className="text-[10px] text-[#555570] font-bold">{unit}</span>
+      </div>
     </div>
   );
 }
