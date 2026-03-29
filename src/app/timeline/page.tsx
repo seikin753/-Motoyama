@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 import PostCard from "@/components/PostCard";
-import { Camera, X, Send } from "lucide-react";
+import { PlusSquare, X, Send, Image as ImageIcon, Heart } from "lucide-react";
 
 type Post = {
   id: string; user_id: string; media_url: string | null; media_type: string | null;
@@ -80,42 +80,52 @@ export default function TimelinePage() {
   function timeAgo(dateStr: string) {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
     if (diff < 60) return "たった今";
-    if (diff < 3600) return Math.floor(diff / 60) + "分前";
-    if (diff < 86400) return Math.floor(diff / 3600) + "時間前";
-    if (diff < 604800) return Math.floor(diff / 86400) + "日前";
+    if (diff < 3600) return Math.floor(diff / 60) + "分";
+    if (diff < 86400) return Math.floor(diff / 3600) + "時間";
+    if (diff < 604800) return Math.floor(diff / 86400) + "日";
     return new Date(dateStr).toLocaleDateString("ja-JP");
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-60"><div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" /></div>;
+    return <div className="flex items-center justify-center min-h-[50vh]"><div className="animate-spin w-8 h-8 border-[3px] border-gray-300 border-t-gray-800 rounded-full" /></div>;
   }
 
   return (
-    <div>
+    <div className="bg-white min-h-screen">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[60] bg-gray-900 text-white rounded-full px-5 py-2.5 text-sm font-medium shadow-xl">
-          {toast}
+        <div className="fixed top-14 left-0 right-0 z-[60] flex justify-center p-4 pointer-events-none">
+          <div className="bg-gray-900 text-white rounded-lg px-4 py-3 text-sm font-semibold shadow-lg">
+            {toast}
+          </div>
         </div>
       )}
 
-      {/* Post Button */}
-      <div className="p-4">
-        <button onClick={() => setShowModal(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold text-sm shadow-md shadow-blue-500/20 active:scale-[0.98] transition-all">
-          <Camera className="w-4 h-4" /> 新規投稿
-        </button>
-      </div>
+      {/* New Post Button (Floating) */}
+      <button 
+        onClick={() => setShowModal(true)}
+        className="fixed bottom-20 right-4 z-[40] w-14 h-14 bg-[#0095f6] hover:bg-[#1877f2] text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 transition-transform active:scale-95"
+      >
+        <PlusSquare className="w-6 h-6" />
+      </button>
 
-      {/* Posts */}
+      {/* Posts Feed */}
       {posts.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-4">📸</div>
-          <p className="text-gray-500 text-sm">まだ投稿がありません</p>
-          <p className="text-gray-400 text-xs mt-1">トレーニング動画を共有しよう！</p>
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+          <div className="w-24 h-24 border-2 border-gray-900 rounded-full flex items-center justify-center mb-4">
+            <ImageIcon className="w-10 h-10 text-gray-900" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">投稿がありません</h2>
+          <p className="text-sm text-gray-500 mb-6">日々のトレーニングの成長をアプリで記録して、ここにシェアしましょう。</p>
+          <button 
+            onClick={() => setShowModal(true)}
+            className="text-sm font-semibold text-[#0095f6] hover:text-[#1877f2]"
+          >
+            最初の投稿をする
+          </button>
         </div>
       ) : (
-        <div>
+        <div className="pb-10">
           {posts.map(post => {
             const reactionData = [
               { type: "helpful", count: post.reactions?.filter(rx => rx.type === "helpful").length || 0, mine: post.reactions?.some(rx => rx.type === "helpful" && rx.user_id === user?.id) || false },
@@ -136,26 +146,34 @@ export default function TimelinePage() {
                   timeAgo={timeAgo(post.created_at)}
                   reactions={reactionData}
                   commentCount={post.comments?.length || 0}
+                  postId={post.id}
+                  isOwner={post.user_id === user?.id}
                   onReaction={(type) => toggleReaction(post.id, type)}
                   onToggleComments={() => toggleComments(post.id)}
                 />
 
                 {/* Comments Section (inline) */}
                 {openComments[post.id] && (
-                  <div className="bg-gray-50 border-b border-gray-100 px-4 py-3">
+                  <div className="bg-white px-4 py-3 border-b border-gray-200/60 pb-4">
                     {openComments[post.id].length === 0 ? (
-                      <p className="text-xs text-gray-400 text-center py-2">コメントはまだありません</p>
+                      <p className="text-xs text-gray-400 text-center py-4">コメントはまだありません</p>
                     ) : (
-                      <div className="space-y-2 mb-3">
+                      <div className="space-y-3 mb-4">
                         {openComments[post.id].map(c => (
-                          <div key={c.id} className="flex items-start gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-bold text-gray-600 mt-0.5">
+                          <div key={c.id} className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[11px] font-bold text-gray-500 shrink-0">
                               {(c.display_name || "?")[0].toUpperCase()}
                             </div>
-                            <div>
-                              <span className="text-xs font-semibold text-gray-900">{c.display_name || "匿名"}</span>
-                              <p className="text-xs text-gray-700">{c.message}</p>
+                            <div className="flex-1 mt-0.5">
+                              <p className="text-[13px] leading-tight text-gray-900">
+                                <span className="font-semibold mr-1.5">{c.display_name || "匿名"}</span>
+                                {c.message}
+                              </p>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <button className="text-[11px] font-semibold text-gray-500 hover:text-gray-900">返信</button>
+                              </div>
                             </div>
+                            <button className="pt-1"><Heart className="w-3 h-3 text-gray-400" /></button>
                           </div>
                         ))}
                       </div>
@@ -178,13 +196,21 @@ export default function TimelinePage() {
 function CommentInput({ onSubmit }: { onSubmit: (msg: string) => void }) {
   const [msg, setMsg] = useState("");
   return (
-    <div className="flex gap-2">
-      <input value={msg} onChange={e => setMsg(e.target.value)} placeholder="コメントを入力..."
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
+      <input 
+        value={msg} 
+        onChange={e => setMsg(e.target.value)} 
+        placeholder="コメントを追加..."
         onKeyDown={e => { if (e.key === "Enter") { onSubmit(msg); setMsg(""); } }}
-        className="flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-xs focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all" />
-      <button onClick={() => { onSubmit(msg); setMsg(""); }}
-        className="w-8 h-8 flex items-center justify-center bg-blue-500 rounded-full text-white hover:bg-blue-600 transition-colors">
-        <Send className="w-3.5 h-3.5" />
+        className="flex-1 bg-white border-0 text-[13px] placeholder:text-gray-400 focus:ring-0 outline-none" 
+      />
+      <button 
+        onClick={() => { onSubmit(msg); setMsg(""); }}
+        disabled={!msg.trim()}
+        className="text-[#0095f6] text-[13px] font-semibold disabled:opacity-50"
+      >
+        投稿する
       </button>
     </div>
   );
@@ -247,69 +273,83 @@ function PostModal({ onClose, user, showToast }: { onClose: () => void; user: an
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-end justify-center" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-white w-full max-w-md rounded-t-3xl p-5 max-h-[90vh] overflow-y-auto animate-slide-up">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-5">
-          <h3 className="text-lg font-bold text-gray-900">新規投稿</h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-slide-up max-w-md mx-auto relative">
+      {/* Header */}
+      <div className="flex justify-between items-center h-12 px-4 border-b border-gray-200/60 bg-white">
+        <button onClick={onClose} className="p-1 -ml-1 hover:opacity-50">
+          <X className="w-7 h-7 text-gray-900" />
+        </button>
+        <h3 className="text-base font-bold text-gray-900">新規投稿</h3>
+        <button onClick={submit} disabled={submitting} className="text-[#0095f6] font-semibold text-[15px] disabled:opacity-50">
+          {submitting ? "シェア中..." : "シェア"}
+        </button>
+      </div>
 
-        {/* Upload Area */}
-        {!preview ? (
-          <div onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-all">
-            <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500 font-medium">タップして画像・動画を選択</p>
-            <p className="text-xs text-gray-400 mt-1">画像5MB / 動画50MBまで</p>
-          </div>
-        ) : (
-          <div className="relative rounded-2xl overflow-hidden mb-4">
-            {file?.type.startsWith("video") ? (
-              <video controls src={preview} className="w-full max-h-52 object-contain bg-gray-100 rounded-2xl" />
-            ) : (
-              <img src={preview} alt="" className="w-full max-h-52 object-cover rounded-2xl" />
-            )}
-            <button onClick={() => { setFile(null); setPreview(null); }}
-              className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center">
-              <X className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        )}
-        <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleFile} className="hidden" />
-
-        {/* Caption */}
-        <textarea value={caption} onChange={e => setCaption(e.target.value)} placeholder="キャプションを入力..."
-          className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-4 h-20 resize-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all" />
-
-        {/* Tags */}
-        <input value={tags} onChange={e => setTags(e.target.value)} placeholder="タグ（カンマ区切り）"
-          className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-3 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all" />
-
-        {/* Purpose */}
-        <select value={purpose} onChange={e => setPurpose(e.target.value)}
-          className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-3 focus:border-blue-400 outline-none bg-white">
-          <option value="">目的タグ（任意）</option>
-          <option value="重量UP">重量UP</option>
-          <option value="フォーム確認">フォーム確認</option>
-          <option value="成長記録">成長記録</option>
-          <option value="質問">質問</option>
-        </select>
-
+      <div className="flex-1 overflow-y-auto bg-white">
         {/* Progress */}
         {progress > 0 && progress < 100 && (
-          <div className="mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-0.5 bg-gray-100 w-full">
+            <div className="h-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         )}
 
-        {/* Submit */}
-        <button onClick={submit} disabled={submitting}
-          className="w-full mt-4 py-3.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50 active:scale-[0.98] transition-all shadow-md shadow-blue-500/20">
-          {submitting ? "投稿中..." : "シェアする"}
-        </button>
+        {/* Upload Area */}
+        <div className="p-4 border-b border-gray-200/60">
+          <div className="flex gap-4">
+            <div className="w-[60px] h-[60px] bg-gray-100 rounded-lg shrink-0 overflow-hidden relative cursor-pointer" onClick={() => fileRef.current?.click()}>
+              {!preview ? (
+                <div className="w-full h-full flex flex-col items-center justify-center border border-gray-200 rounded-lg">
+                  <ImageIcon className="w-6 h-6 text-gray-400" />
+                </div>
+              ) : (
+                <>
+                  {file?.type.startsWith("video") ? (
+                    <video src={preview} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={preview} alt="" className="w-full h-full object-cover" />
+                  )}
+                  <div className="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <X className="w-4 h-4 text-white drop-shadow-md" onClick={(e) => { e.stopPropagation(); setFile(null); setPreview(null); }} />
+                  </div>
+                </>
+              )}
+            </div>
+            <textarea 
+              value={caption} 
+              onChange={e => setCaption(e.target.value)} 
+              placeholder="キャプションを入力..."
+              className="flex-1 bg-transparent border-none text-[15px] placeholder:text-gray-400 focus:ring-0 outline-none resize-none pt-1" 
+              rows={3}
+            />
+          </div>
+          <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleFile} className="hidden" />
+        </div>
+
+        {/* Settings Links */}
+        <div className="divide-y divide-gray-200/60 border-b border-gray-200/60">
+          <div className="px-4 py-3.5">
+            <input 
+              value={tags} 
+              onChange={e => setTags(e.target.value)} 
+              placeholder="タグ（カンマ区切り）"
+              className="w-full bg-transparent border-none text-[15px] placeholder:text-gray-900 focus:ring-0 outline-none" 
+            />
+          </div>
+          <div className="px-4 py-3.5 flex items-center justify-between">
+            <span className="text-[15px] text-gray-900">目的タグ（任意）</span>
+            <select 
+              value={purpose} 
+              onChange={e => setPurpose(e.target.value)}
+              className="bg-transparent border-none text-[15px] text-gray-500 focus:ring-0 outline-none text-right appearance-none"
+            >
+              <option value="">設定しない</option>
+              <option value="重量UP">重量UP</option>
+              <option value="フォーム確認">フォーム確認</option>
+              <option value="成長記録">成長記録</option>
+              <option value="質問">質問</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );
