@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #f0f0f5;
+  --background: #fafafa;
+  --foreground: #262626;
 }
 
 @layer base {
@@ -12,9 +12,18 @@
     background: var(--background);
     color: var(--foreground);
     -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "palt";
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 0; height: 0; }

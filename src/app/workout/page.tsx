@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
+import { Dumbbell, Copy, Plus, Minus, Scale } from "lucide-react";
 
 type Exercise = { id: string; name: string; muscle_group: string };
 type SetData = { weight: string; reps: string };
@@ -19,9 +20,7 @@ export default function WorkoutPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
 
-  useEffect(() => {
-    loadExercises();
-  }, []);
+  useEffect(() => { loadExercises(); }, []);
 
   async function loadExercises() {
     const { data } = await supabase.from("exercises").select("*").order("muscle_group");
@@ -65,9 +64,7 @@ export default function WorkoutPage() {
     setSets([...sets, { weight: last.weight, reps: last.reps }]);
   }
 
-  function removeSet(i: number) {
-    setSets(sets.filter((_, idx) => idx !== i));
-  }
+  function removeSet(i: number) { setSets(sets.filter((_, idx) => idx !== i)); }
 
   function updateSet(i: number, field: "weight" | "reps", val: string) {
     const newSets = [...sets];
@@ -76,25 +73,21 @@ export default function WorkoutPage() {
   }
 
   async function save() {
-    if (!selectedExercise) { showToast("種目を選択してください", true); return; }
+    if (!selectedExercise) { showToast("種目を選択してください"); return; }
     const validSets = sets.filter(s => s.weight && s.reps);
-    if (validSets.length === 0) { showToast("セットを入力してください", true); return; }
+    if (validSets.length === 0) { showToast("セットを入力してください"); return; }
     if (!user) return;
 
     setSaving(true);
     const today = new Date().toISOString().split("T")[0];
     const rows = validSets.map(s => ({
-      user_id: user.id,
-      date: today,
-      exercise: selectedExercise,
-      weight_kg: Number(s.weight),
-      reps: Number(s.reps),
-      sets: 1,
+      user_id: user.id, date: today, exercise: selectedExercise,
+      weight_kg: Number(s.weight), reps: Number(s.reps), sets: 1,
       body_weight: bodyWeight ? Number(bodyWeight) : null,
     }));
 
     const { error } = await supabase.from("workouts").insert(rows);
-    if (error) { showToast("保存に失敗しました", true); }
+    if (error) { showToast("保存に失敗しました"); }
     else {
       showToast("記録を保存しました！💪");
       setSets([{ weight: "", reps: "" }]);
@@ -105,30 +98,28 @@ export default function WorkoutPage() {
     setSaving(false);
   }
 
-  function showToast(msg: string, isError = false) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }
+  function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(""), 3000); }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-bold">💪 トレーニング記録</h2>
-
+    <div className="p-4 space-y-4">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#2d2d4a] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold shadow-lg animate-pulse">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[60] bg-gray-900 text-white rounded-full px-5 py-2.5 text-sm font-medium shadow-xl">
           {toast}
         </div>
       )}
 
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <Dumbbell className="w-5 h-5 text-blue-500" />
+        <h2 className="text-lg font-bold text-gray-900">トレーニング記録</h2>
+      </div>
+
       {/* Exercise Select */}
       <div>
-        <label className="text-[10px] font-bold text-[#8888a8] uppercase mb-1 block">種目</label>
-        <select
-          value={selectedExercise}
-          onChange={e => onExerciseChange(e.target.value)}
-          className="w-full bg-[#16162a] border border-white/5 rounded-xl p-4 text-sm font-bold focus:border-[#6c5ce7] outline-none"
-        >
+        <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 block">種目</label>
+        <select value={selectedExercise} onChange={e => onExerciseChange(e.target.value)}
+          className="w-full bg-white border border-gray-200 rounded-xl p-3.5 text-sm font-medium focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all">
           <option value="">種目を選択...</option>
           {Object.entries(grouped).map(([group, exs]) => (
             <optgroup key={group} label={group}>
@@ -140,48 +131,57 @@ export default function WorkoutPage() {
 
       {/* Last Record */}
       {lastRecord && (
-        <div className="bg-[#16162a] border border-white/5 rounded-xl p-3">
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-[#8888a8]">前回記録</span>
-            <button onClick={copyLast} className="text-xs text-[#a29bfe] font-bold">📋 コピー</button>
+            <span className="text-xs font-semibold text-blue-600">前回記録</span>
+            <button onClick={copyLast} className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700">
+              <Copy className="w-3.5 h-3.5" /> コピー
+            </button>
           </div>
-          <div className="text-sm mt-1">
-            {lastRecord.weight_kg}kg × {lastRecord.reps}回 × {lastRecord.sets}セット
-            <span className="text-[#555570] ml-2">({lastRecord.date})</span>
+          <div className="text-sm font-semibold text-gray-800 mt-1">
+            {lastRecord.weight_kg}kg × {lastRecord.reps}回 × {lastRecord.sets}set
+            <span className="text-gray-400 font-normal ml-2">({lastRecord.date})</span>
           </div>
         </div>
       )}
 
       {/* Sets */}
       <div>
-        <label className="text-[10px] font-bold text-[#8888a8] uppercase mb-2 block">セット</label>
+        <label className="text-xs font-semibold text-gray-500 uppercase mb-2 block">セット</label>
         <div className="space-y-2">
           {sets.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-[#2d2d4a] rounded-full flex items-center justify-center text-xs font-bold text-[#a29bfe]">{i + 1}</span>
-              <input type="number" placeholder="重量 kg" value={s.weight} onChange={e => updateSet(i, "weight", e.target.value)} step="0.5"
-                className="flex-1 bg-[#16162a] border border-white/5 rounded-lg p-3 text-sm focus:border-[#6c5ce7] outline-none" />
-              <input type="number" placeholder="回数" value={s.reps} onChange={e => updateSet(i, "reps", e.target.value)}
-                className="flex-1 bg-[#16162a] border border-white/5 rounded-lg p-3 text-sm focus:border-[#6c5ce7] outline-none" />
-              {i > 0 && <button onClick={() => removeSet(i)} className="text-[#ff4757] text-lg">✕</button>}
+              <span className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">{i + 1}</span>
+              <input type="number" placeholder="kg" value={s.weight} onChange={e => updateSet(i, "weight", e.target.value)} step="0.5"
+                className="flex-1 border border-gray-200 rounded-lg p-3 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none" />
+              <input type="number" placeholder="回" value={s.reps} onChange={e => updateSet(i, "reps", e.target.value)}
+                className="flex-1 border border-gray-200 rounded-lg p-3 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none" />
+              {i > 0 && (
+                <button onClick={() => removeSet(i)} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 text-red-400">
+                  <Minus className="w-4 h-4" />
+                </button>
+              )}
             </div>
           ))}
         </div>
-        <button onClick={addSet} className="w-full mt-2 py-2 border border-white/10 rounded-lg text-xs text-[#8888a8] hover:bg-white/5 transition-colors">
-          + セット追加
+        <button onClick={addSet}
+          className="w-full mt-2 py-2.5 flex items-center justify-center gap-1.5 border border-dashed border-gray-300 rounded-xl text-xs font-medium text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all">
+          <Plus className="w-3.5 h-3.5" /> セット追加
         </button>
       </div>
 
       {/* Body Weight */}
       <div>
-        <label className="text-[10px] font-bold text-[#8888a8] uppercase mb-1 block">体重（任意）</label>
+        <label className="text-xs font-semibold text-gray-500 uppercase mb-1.5 flex items-center gap-1">
+          <Scale className="w-3.5 h-3.5" /> 体重（任意）
+        </label>
         <input type="number" value={bodyWeight} onChange={e => setBodyWeight(e.target.value)} step="0.1" placeholder="kg"
-          className="w-full bg-[#16162a] border border-white/5 rounded-xl p-4 text-sm focus:border-[#6c5ce7] outline-none" />
+          className="w-full border border-gray-200 rounded-xl p-3.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none" />
       </div>
 
-      {/* Save Button */}
+      {/* Save */}
       <button onClick={save} disabled={saving}
-        className="w-full py-4 bg-gradient-to-r from-[#ff6b35] to-[#ff4757] rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(255,107,53,0.3)] disabled:opacity-50 transition-all">
+        className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 active:scale-[0.98] transition-all">
         {saving ? "保存中..." : "💪 記録を保存"}
       </button>
     </div>
