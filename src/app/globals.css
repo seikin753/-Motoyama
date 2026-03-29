@@ -1,16 +1,23 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --background: #fafafa;
-  --foreground: #262626;
+@theme {
+  --font-sans: var(--font-noto), var(--font-inter), sans-serif;
+  
+  --color-insta-bg: #fafafa;
+  --color-insta-border: #dbdbdb;
+  --color-insta-text: #262626;
+  --color-insta-blue: #0095f6;
+  --color-insta-blue-hover: #1877f2;
+  --color-insta-pink: #d62976;
+  --color-insta-purple: #962fbf;
+  --color-insta-orange: #fa7e1e;
+  --color-insta-yellow: #feda75;
 }
 
 @layer base {
   body {
-    background: var(--background);
-    color: var(--foreground);
+    background-color: var(--color-insta-bg);
+    color: var(--color-insta-text);
     -webkit-tap-highlight-color: transparent;
     font-feature-settings: "palt";
   }

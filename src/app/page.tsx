@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
-import { Flame, TrendingUp, Dumbbell, Zap, AlertTriangle, ChevronRight } from "lucide-react";
+import { Flame, Activity, Zap, Layers, AlertCircle } from "lucide-react";
 
 type Profile = { display_name: string; total_points: number };
 type WorkoutRow = { exercise: string; weight_kg: number; reps: number; sets: number };
@@ -71,93 +71,101 @@ export default function Dashboard() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center h-60">
-        <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin w-8 h-8 border-[3px] border-gray-300 border-t-gray-800 rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Greeting */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">
-          おかえり、{profile?.display_name || "トレーニー"} 👋
+    <div className="bg-[#fafafa] min-h-full">
+      {/* Header section */}
+      <div className="bg-white px-4 py-5 border-b border-gray-200/60">
+        <h2 className="text-[22px] font-bold text-gray-900 tracking-tight">
+          Hello, {profile?.display_name || "トレーニー"}
         </h2>
-        <p className="text-sm text-gray-500 mt-0.5">今日もトレーニングを頑張ろう！</p>
+        <p className="text-sm text-gray-500 mt-1 font-medium">今日のトレーニングも頑張りましょう</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard icon={<Flame className="w-5 h-5 text-orange-500" />} value={summary.streak} label="連続日数" accent="orange" />
-        <StatCard icon={<TrendingUp className="w-5 h-5 text-blue-500" />} value={summary.this_week} label="今週の記録" accent="blue" />
-        <StatCard icon={<Dumbbell className="w-5 h-5 text-purple-500" />} value={summary.total_workouts} label="総記録数" accent="purple" />
-        <StatCard icon={<Zap className="w-5 h-5 text-yellow-500" />} value={summary.total_points} label="ポイント" accent="yellow" />
-      </div>
+      <div className="p-4 space-y-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard icon={<Flame className="w-[18px] h-[18px] text-white" />} iconBg="bg-gradient-to-tr from-orange-400 to-red-500" value={summary.streak} label="連続記録 (日)" />
+          <StatCard icon={<Activity className="w-[18px] h-[18px] text-white" />} iconBg="bg-gradient-to-tr from-blue-400 to-cyan-500" value={summary.this_week} label="今週の記録" />
+          <StatCard icon={<Layers className="w-[18px] h-[18px] text-white" />} iconBg="bg-gradient-to-tr from-purple-500 to-pink-500" value={summary.total_workouts} label="総記録セット" />
+          <StatCard icon={<Zap className="w-[18px] h-[18px] text-white" />} iconBg="bg-gradient-to-tr from-yellow-400 to-amber-500" value={summary.total_points} label="累計ポイント" />
+        </div>
 
-      {/* Stagnation Warning */}
-      {stagnant.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-amber-800">停滞中の種目</h3>
+        {/* Stagnation Warning */}
+        {stagnant.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <h3 className="text-[15px] font-bold text-gray-900">停滞アラート</h3>
+            </div>
+            <p className="text-[13px] text-gray-600 leading-relaxed mb-1">
+              以下の種目で2週間以上PR更新がありません。<br/>
+              重量やレップスを見直してみましょう！
+            </p>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {stagnant.map((ex, i) => (
+                <span key={i} className="px-2.5 py-1 bg-red-50 text-red-600 rounded-md text-xs font-semibold">
+                  {ex}
+                </span>
+              ))}
+            </div>
           </div>
-          <p className="text-xs text-amber-700">{stagnant.join("、")}</p>
-          <p className="text-[11px] text-amber-500 mt-1">2週間以上PR更新がありません</p>
-        </div>
-      )}
+        )}
 
-      {/* Today's Workouts */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">📋 本日のトレーニング</h3>
-          <span className="text-xs text-gray-400">{todayWorkouts.length}件</span>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {todayWorkouts.length > 0 ? (
-            todayWorkouts.map((w, i) => (
-              <div key={i} className="flex justify-between items-center px-4 py-3">
-                <span className="text-sm text-gray-800">{w.exercise}</span>
-                <span className="text-sm text-blue-600 font-semibold">{w.weight_kg}kg × {w.reps}回 × {w.sets}set</span>
+        {/* Today's Workouts */}
+        <div>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-[15px] font-bold text-gray-900">今日の記録</h3>
+            <span className="text-xs font-semibold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{todayWorkouts.length}</span>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            {todayWorkouts.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {todayWorkouts.map((w, i) => (
+                  <div key={i} className="flex justify-between items-center px-4 py-3.5">
+                    <span className="text-[15px] font-semibold text-gray-900">{w.exercise}</span>
+                    <span className="text-[14px] text-gray-500 font-medium">
+                      <span className="text-gray-900 font-bold">{w.weight_kg}</span>kg × <span className="text-gray-900 font-bold">{w.reps}</span>回
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))
-          ) : (
-            <p className="text-sm text-gray-400 text-center py-6">まだ記録がありません</p>
-          )}
+            ) : (
+              <div className="text-center py-10">
+                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Activity className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-[14px] text-gray-500 font-medium mb-4">本日の記録はまだありません</p>
+                <button
+                  onClick={() => router.push("/workout")}
+                  className="px-6 py-2 bg-[#0095f6] hover:bg-[#1877f2] text-white rounded-lg font-semibold text-[13px] transition-colors"
+                >
+                  トレーニングを記録
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => router.push("/workout")}
-          className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-semibold text-sm shadow-md shadow-blue-500/20 hover:shadow-lg active:scale-[0.98] transition-all"
-        >
-          <Dumbbell className="w-4 h-4" /> 記録する
-        </button>
-        <button
-          onClick={() => router.push("/timeline")}
-          className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold text-sm shadow-md shadow-purple-500/20 hover:shadow-lg active:scale-[0.98] transition-all"
-        >
-          📹 投稿する
-        </button>
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, value, label, accent }: { icon: React.ReactNode; value: number; label: string; accent: string }) {
-  const bgMap: Record<string, string> = {
-    orange: "bg-orange-50 border-orange-100",
-    blue: "bg-blue-50 border-blue-100",
-    purple: "bg-purple-50 border-purple-100",
-    yellow: "bg-yellow-50 border-yellow-100",
-  };
+function StatCard({ icon, value, label, iconBg }: { icon: React.ReactNode; value: number; label: string; iconBg: string }) {
   return (
-    <div className={`${bgMap[accent] || "bg-gray-50 border-gray-100"} border rounded-2xl p-4`}>
-      <div className="flex items-center gap-2 mb-2">{icon}</div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between aspect-[4/3]">
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${iconBg}`}>
+        {icon}
+      </div>
+      <div>
+        <div className="text-2xl font-bold text-gray-900 tracking-tight">{value}</div>
+        <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mt-0.5">{label}</div>
+      </div>
     </div>
   );
 }

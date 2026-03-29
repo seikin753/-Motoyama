@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { TrendingUp, Zap, Scale, Trophy, Medal } from "lucide-react";
+import { TrendingUp, Zap, Scale } from "lucide-react";
 
 type RankItem = { display_name: string; value: string; detail?: string };
 
 export default function RankingPage() {
-  const [tab, setTab] = useState<"growth" | "points" | "ratio">("growth");
+  const [tab, setTab] = useState<"growth" | "points" | "ratio">("points");
   const [rankings, setRankings] = useState<RankItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,75 +86,67 @@ export default function RankingPage() {
   }
 
   const tabs = [
-    { key: "growth", label: "成長率", icon: <TrendingUp className="w-4 h-4" /> },
     { key: "points", label: "ポイント", icon: <Zap className="w-4 h-4" /> },
+    { key: "growth", label: "成長率", icon: <TrendingUp className="w-4 h-4" /> },
     { key: "ratio", label: "自重比", icon: <Scale className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Tabs */}
-      <div className="flex bg-gray-100 rounded-xl p-1">
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key as any)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all
-              ${tab === t.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}>
-            {t.icon} {t.label}
-          </button>
-        ))}
+    <div className="bg-white min-h-screen">
+      {/* Header section w/ Tabs inside */}
+      <div className="bg-white border-b border-gray-200/60 sticky top-11 z-40">
+        <div className="flex px-4 pt-3 pb-0 overflow-x-auto no-scrollbar gap-6">
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key as any)}
+              className={`flex items-center gap-1.5 pb-3 text-[14px] font-bold transition-colors whitespace-nowrap
+                ${tab === t.key 
+                  ? "text-gray-900 border-b-2 border-gray-900" 
+                  : "text-gray-400 border-b-2 border-transparent"}`}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Rankings */}
+      {/* Rankings Feed */}
       {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <div className="animate-spin w-8 h-8 border-[3px] border-gray-300 border-t-gray-800 rounded-full" />
         </div>
       ) : rankings.length === 0 ? (
-        <div className="text-center py-16">
-          <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">まだランキングデータがありません</p>
-          <p className="text-gray-400 text-xs mt-1">トレーニングを記録しよう！</p>
+        <div className="text-center py-20">
+          <div className="w-20 h-20 border-2 border-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <TrendingUp className="w-8 h-8 text-gray-900" />
+          </div>
+          <p className="text-[14px] font-bold text-gray-900">ランキングがありません</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y divide-gray-100 pb-10">
           {rankings.map((r, i) => {
             const pos = i + 1;
             return (
-              <div key={i} className="bg-white border border-gray-100 rounded-xl p-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors">
-                <RankBadge pos={pos} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-gray-900 truncate">{r.display_name}</div>
-                  {r.detail && <div className="text-[11px] text-gray-400">{r.detail}</div>}
+              <div key={i} className="px-4 py-3.5 flex items-center gap-4 bg-white hover:bg-gray-50 transition-colors">
+                <div className="w-6 text-center text-[14px] font-bold text-gray-500">
+                  {pos}
                 </div>
-                <div className={`text-sm font-bold ${pos <= 3 ? "text-blue-600" : "text-gray-700"}`}>{r.value}</div>
+                {/* Avatar matching Instagram DM style */}
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 p-[1.5px] shrink-0">
+                  <div className="w-full h-full bg-white rounded-full border border-white flex items-center justify-center text-gray-900 text-[15px] font-bold">
+                    {(r.display_name || "?")[0].toUpperCase()}
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className="text-[14px] font-bold text-gray-900 truncate tracking-tight">{r.display_name}</div>
+                  {r.detail && <div className="text-[13px] text-gray-500">{r.detail}</div>}
+                </div>
+                <div className="text-[15px] font-bold text-gray-900">
+                  {r.value}
+                </div>
               </div>
             );
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function RankBadge({ pos }: { pos: number }) {
-  if (pos === 1) return (
-    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-md shadow-yellow-500/30">
-      <Trophy className="w-4 h-4 text-white" />
-    </div>
-  );
-  if (pos === 2) return (
-    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center shadow-sm">
-      <Medal className="w-4 h-4 text-white" />
-    </div>
-  );
-  if (pos === 3) return (
-    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
-      <Medal className="w-4 h-4 text-white" />
-    </div>
-  );
-  return (
-    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500">
-      {pos}
     </div>
   );
 }

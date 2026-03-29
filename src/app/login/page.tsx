@@ -3,116 +3,130 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Dumbbell } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoginView, setIsLoginView] = useState(true);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
+    if (isLoginView) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError("ログインに失敗しました。パスワードをご確認ください。");
+      else router.push("/");
     } else {
-      router.push("/");
-    }
-    setLoading(false);
-  };
-
-  const handleSignUp = async () => {
-    setLoading(true);
-    setError("");
-
-    const { error, data } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      if (data.session) {
-        router.push("/");
-      } else {
-        setError("確認メールを送信しました。メールをご確認ください。");
-      }
+      const { error, data } = await supabase.auth.signUp({ email, password });
+      if (error) setError(error.message);
+      else if (data.session) router.push("/");
+      else setError("確認メールを送信しました。メールをご確認ください。");
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-8 bg-white max-w-md mx-auto">
-      {/* Logo */}
-      <div className="text-center mb-10">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
-          <Dumbbell className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex flex-col justify-center items-center px-6 bg-white max-w-md mx-auto relative pb-20">
+      <div className="w-full max-w-[350px]">
+        {/* Logo */}
+        <div className="text-center mb-10 mt-8">
+          <h1 
+            className="text-4xl font-bold tracking-tight text-gray-900 mb-2" 
+            style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}
+          >
+            MuscleBoard
+          </h1>
+          <p className="text-gray-500 text-sm font-medium">友達と筋トレの成長をシェアしよう</p>
         </div>
-        <h1 className="text-3xl font-bold italic tracking-tighter text-gray-900 mb-1">
-          MuscleBoard
-        </h1>
-        <p className="text-gray-500 text-sm">成長を加速させるSNS</p>
-      </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl font-medium text-center">
-            {error}
+        <form onSubmit={handleAuth} className="space-y-3">
+          {error && (
+            <div className="bg-red-50 text-red-500 text-xs p-3 rounded-sm font-medium text-center border border-red-100">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-[3px] px-3 py-2.5 text-sm focus:border-gray-400 outline-none transition-colors placeholder:text-gray-400"
+              placeholder="メールアドレス"
+            />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-[3px] px-3 py-2.5 text-sm focus:border-gray-400 outline-none transition-colors placeholder:text-gray-400"
+              placeholder="パスワード"
+            />
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full py-2 bg-[#0095f6] hover:bg-[#1877f2] text-white rounded-[8px] font-semibold text-sm disabled:opacity-70 transition-colors"
+            >
+              {loading ? "処理中..." : isLoginView ? "ログイン" : "登録してはじめる"}
+            </button>
+          </div>
+        </form>
+
+        {/* Divider */}
+        <div className="flex items-center gap-4 my-6">
+          <div className="flex-1 h-px bg-gray-300"></div>
+          <span className="text-sm font-semibold text-gray-500">または</span>
+          <div className="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        {/* Sub-actions */}
+        {isLoginView && (
+          <div className="text-center">
+            <button className="text-xs text-[#00376b] hover:text-[#001d38] transition-colors">
+              パスワードを忘れた場合
+            </button>
           </div>
         )}
+      </div>
 
-        <div>
-          <label className="text-xs font-semibold text-gray-500 mb-1.5 block">メールアドレス</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all"
-            placeholder="you@example.com"
-          />
+      {/* Footer Switch */}
+      <div className="absolute bottom-10 left-0 right-0 max-w-md mx-auto px-6">
+        <div className="border border-gray-300 py-4 text-center text-sm rounded-sm">
+          {isLoginView ? (
+            <p className="text-gray-900">
+              アカウントをお持ちでないですか？{" "}
+              <button 
+                onClick={() => { setIsLoginView(false); setError(""); }} 
+                className="text-[#0095f6] font-semibold hover:text-[#1877f2]"
+              >
+                登録する
+              </button>
+            </p>
+          ) : (
+            <p className="text-gray-900">
+              アカウントをお持ちですか？{" "}
+              <button 
+                onClick={() => { setIsLoginView(true); setError(""); }} 
+                className="text-[#0095f6] font-semibold hover:text-[#1877f2]"
+              >
+                ログインする
+              </button>
+            </p>
+          )}
         </div>
-
-        <div>
-          <label className="text-xs font-semibold text-gray-500 mb-1.5 block">パスワード</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all"
-            placeholder="••••••••"
-          />
-        </div>
-
-        <div className="pt-2 space-y-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow-md shadow-blue-500/20 disabled:opacity-50 active:scale-[0.98] transition-all"
-          >
-            ログイン
-          </button>
-          <button
-            type="button"
-            onClick={handleSignUp}
-            disabled={loading}
-            className="w-full py-4 bg-white border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-          >
-            新規登録
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }
